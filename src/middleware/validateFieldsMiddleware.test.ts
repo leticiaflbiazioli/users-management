@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { validateFieldsMiddleware } from "./validateFieldsMiddleware";
+import { validateUser } from "./validateFieldsMiddleware";
 
 describe("validateFieldsMiddleware", () => {
   let req: Partial<Request>;
@@ -17,66 +17,64 @@ describe("validateFieldsMiddleware", () => {
     next = jest.fn();
   });
 
-  it("should return 400 if name is not provided", async () => {
-    req.body = { email: "test@example.com" };
+  it("should call next if data is valid", () => {
+    req.body = {
+      name: "Ana",
+      email: "ana@example.com",
+      age: 25,
+      active: true,
+    };
 
-    await validateFieldsMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      error: "O nome deve ter pelo menos 3 caracteres",
-    });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it("should return 400 if name is less than 3 characters", async () => {
-    req.body = { name: "Jo", email: "test@example.com" };
-
-    await validateFieldsMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      error: "O nome deve ter pelo menos 3 caracteres",
-    });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it("should return 400 if email is not provided", async () => {
-    req.body = { name: "Ana" };
-
-    await validateFieldsMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "O email é obrigatório" });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it("should return 400 if email is invalid", async () => {
-    req.body = { name: "Ana", email: "invalidemail" };
-
-    await validateFieldsMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "Email inválido" });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it("should call next if name and email are valid", async () => {
-    req.body = { name: "Ana", email: "ana@example.com" };
-
-    await validateFieldsMiddleware(req as Request, res as Response, next);
+    validateUser(req as Request, res as Response, next);
 
     expect(next).toHaveBeenCalled();
-    expect(res.status).not.toHaveBeenCalled();
   });
 
-  it("should return 500 if there is an unexpected error", async () => {
-    req = null as unknown as Request;
+  it("should return error if name is shorter than 3 characters", () => {
+    req.body = { name: "An", email: "ana@example.com" };
 
-    await validateFieldsMiddleware(req as Request, res as Response, next);
+    validateUser(req as Request, res as Response, next);
 
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: "Erro ao validar dados" });
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      errors: ["O nome deve ter pelo menos 3 caracteres"],
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should return error if email is invalid", () => {
+    req.body = { name: "Ana", email: "email_invalido" };
+
+    validateUser(req as Request, res as Response, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      errors: ["Formato de e-mail inválido"],
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should return error if email is empty", () => {
+    req.body = { name: "Ana", email: "" };
+
+    validateUser(req as Request, res as Response, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      errors: ["O e-mail é obrigatório"],
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should return error if age is invalid", () => {
+    req.body = { name: "Ana", email: "ana@example.com", age: "vinte" };
+
+    validateUser(req as Request, res as Response, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      errors: ["A idade deve ser um número"],
+    });
     expect(next).not.toHaveBeenCalled();
   });
 });
