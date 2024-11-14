@@ -8,14 +8,14 @@ import {
   updateUser,
 } from "../controllers/userController";
 import { authMiddleware } from "../middleware/authMiddleware";
-import { validateFieldsMiddleware } from "../middleware/validateFieldsMiddleware";
+import { validateUser } from "../middleware/validateFieldsMiddleware";
 
 const router = Router();
 router.post("/login", login);
-router.post("/users", authMiddleware, validateFieldsMiddleware, createUser);
+router.post("/users", [authMiddleware, validateUser], createUser);
 router.get("/users", authMiddleware, getUsers);
 router.get("/users/:id", authMiddleware, getUser);
-router.put("/users/:id", authMiddleware, validateFieldsMiddleware, updateUser);
+router.put("/users/:id", [authMiddleware, validateUser], updateUser);
 router.delete("/users/:id", authMiddleware, deleteUser);
 
 export default router;
