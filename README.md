@@ -1,4 +1,4 @@
-# CRUD API
+# USERS MANAGEMENT API
 
 This project is a RESTful API that performs CRUD operations on a SQLite database using Node.js, TypeScript, Express and Sequelize.
 It allows you to add, edit, list and delete users in a list. The fields for each record are: name (required), email (required and unique), age (optional), active (boolean with default true).
